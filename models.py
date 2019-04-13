@@ -3,6 +3,8 @@ import csv
 import sys
 import collections
 from tqdm import tqdm
+import json
+import copy
 
 from pytorch_pretrained_bert import BertConfig, BertTokenizer, BertModel
 from pytorch_pretrained_bert.modeling import BertPreTrainedModel

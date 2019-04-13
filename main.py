@@ -13,6 +13,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, TensorDataset
 
 from models import BertTokenizer, MnliProcessor, BinaryMnliProcessor, BertForSequenceClassification
+import copy
 
 BERT_SIZE = 'base'  # or 'large'
 BERT_CASED = False
@@ -108,7 +109,7 @@ train_dataloader = processor.get_dataloader(DATA_DIR, 'small_binary_train', toke
 
 print("training...")
 train(binary_model, train_dataloader, num_epochs=3, finetune=False)
-torch.save(binary_model, "models/small_binary/no_finetune.pt")
+torch.save(binary_model.state_dict(), "models/small_binary/no_finetune.pt")
 with open('models/small_binary/bert_config.json', 'w') as f:
     f.write(binary_model.config.to_json_string())
 
