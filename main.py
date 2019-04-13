@@ -77,8 +77,8 @@ def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
                 return modify
         
             row = [None]*(pos_pooled_output.shape[1]*2+2)
-            row_idx[0] = pos_logits
-            row_idx[1] = neg_logits
+            row[0] = pos_logits
+            row[1] = neg_logits
             row_idx = 2
             
             for i in range(pos_pooled_output.shape[1]):
@@ -106,23 +106,23 @@ num_labels = len(processor.get_labels())
 binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = CACHE_DIR, num_labels=num_labels)
 
 train_dataloader = processor.get_dataloader(DATA_DIR, 'small_binary_train', tokenizer, max_seq_len=70)
-
+'''
 print("training...")
 train(binary_model, train_dataloader, num_epochs=3, finetune=False)
 torch.save(binary_model.state_dict(), "models/small_binary/no_finetune.pt")
 with open('models/small_binary/bert_config.json', 'w') as f:
     f.write(binary_model.config.to_json_string())
-
+'''
 print("loading model...")
 config = BertConfig('models/small_binary/bert_config.json')
 eval_model = BertForSequenceClassification(config, num_labels = num_labels)
 eval_model.load_state_dict(torch.load("models/small_binary/no_finetune.pt"))
 eval_model.eval()
 
-pos_processor = BinaryMnliProcessor(5, 6)
-neg_processor = BinaryMnliProessor(7, 6)
-pos_dataloader = pos_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1)
-neg_dataloader = neg_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1)
+pos_processor = BinaryMnliProcessor()
+neg_processor = BinaryMnliProcessor()
+pos_dataloader = pos_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 5, b_idx = 6)
+neg_dataloader = neg_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 7, b_idx = 6)
 
 evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/finetune") 
 
