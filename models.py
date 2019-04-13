@@ -196,9 +196,11 @@ class BertForSequenceClassification(BertPreTrainedModel):
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier(pooled_output)
 
-        if labels is not None:
-            loss_fct = CrossEntropyLoss()
-            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-            return loss, pooled_output
-        else:
-            return logits, pooled_output
+        return logits, pooled_output
+
+#        if labels is not None:
+#            loss_fct = CrossEntropyLoss()
+#            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+#            return loss, pooled_output
+#        else:
+#            return logits, pooled_output
