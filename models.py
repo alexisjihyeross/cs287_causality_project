@@ -65,7 +65,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         features.append(InputFeatures(input_ids, input_mask, segment_ids, label_id))
     return features
 
-class MnliProcessor:
+class MnliProcessor():
     """Processor for the MultiNLI data set (GLUE version)."""
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
@@ -83,25 +83,30 @@ class MnliProcessor:
         """Gets the list of labels for this data set."""
         return ["contradiction", "entailment", "neutral"]
 
-    def _create_examples(self, lines, set_type):
+    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
-            text_a = line[8]
-            text_b = line[9]
-            label = line[-1]
+            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched":
+                text_a = line[a_idx]
+                text_b = line[b_idx]
+                label = "entailment"
+            else:
+                text_a = line[8]
+                text_b = line[9]
+                label = line[-1]
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70):
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None):
         if data_file not in ['dev_mismatched', 'dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'train', 'small_train']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
-        examples = self._create_examples(data, data_file)
+        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx)
         labels = self.get_labels()
 
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)
@@ -109,7 +114,7 @@ class MnliProcessor:
 
         return DataLoader(TensorDataset(*dataset), batch_size=batch_size)
 
-class BinaryMnliProcessor:
+class BinaryMnliProcessor():
     """Processor for the MultiNLI data set with neutral examples removed."""
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
@@ -127,25 +132,30 @@ class BinaryMnliProcessor:
         """Gets the list of labels for this data set."""
         return ["contradiction", "entailment"]
 
-    def _create_examples(self, lines, set_type):
+    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
-            text_a = line[8]
-            text_b = line[9]
-            label = line[-1]
+            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched":
+                text_a = line[a_idx]
+                text_b = line[b_idx]
+                label = "entailment"
+            else:
+                text_a = line[8]
+                text_b = line[9]
+                label = line[-1]
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70):
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None):
         if data_file not in ['binary_dev_mismatched', 'binary_dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'binary_train', 'small_binary_train']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
-        examples = self._create_examples(data, data_file)
+        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx)
         labels = self.get_labels()
 
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)
