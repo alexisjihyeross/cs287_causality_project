@@ -4,6 +4,8 @@ import sys
 import collections
 from tqdm import tqdm
 
+import numpy as np
+
 from pytorch_pretrained_bert import BertConfig, BertTokenizer, BertModel
 from pytorch_pretrained_bert.modeling import BertPreTrainedModel, BertConfig
 from pytorch_pretrained_bert.optimization import BertAdam
@@ -60,14 +62,20 @@ def train(model, dataloader, lr=5e-5, warmup=0.1, num_epochs=2, device='cuda', f
 
 
 def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
-    with open(output_file_name + ".tsv", mode="w") as out_file:
+    with open(output_file_name + ".tsv", mode="w") as out_file, open(output_file_name + ".txt", mode="w") as out_log, open(output_file_name + "_significant_dim.tsv", mode="w") as significant_dim_file:
         writer = csv.writer(out_file, delimiter = '\t')
-        
-        for pos_batch, neg_batch in zip(pos_dataloader, neg_dataloader):
+        significant_dim_writer = csv.writer(significant_dim_file, delimiter = '\t') 
+        significant_dim_writer.writerow(["direct_effect_dimensions", "indirect_effect_dimensions"])
+        batch_num = 0
+        for pos_batch, neg_batch in (zip(pos_dataloader, neg_dataloader)):
+            significant_direct_dims = []
+            significant_indirect_dims = []
             pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids = pos_batch
             neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids = neg_batch
-        
+            #print("pos: ") 
             pos_logits, pos_pooled_output = model(pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids)
+            
+            #print("neg: ")
             neg_logits, neg_pooled_output = model(neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids)
         
             def meta_modify(pooled_output, idx, value):
@@ -78,42 +86,66 @@ def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
       
             hidden_dim = pos_pooled_output.shape[1]
             row = [None]*(hidden_dim*2+2)
-            row[0] = nn.functional.softmax(pos_logits.flatten()).tolist()
-            row[1] = nn.functional.softmax(neg_logits.flatten()).tolist()
+            row[0] = nn.functional.softmax(pos_logits.flatten(), dim=0).tolist()
+            row[1] = nn.functional.softmax(neg_logits.flatten(), dim=0).tolist()
             row_idx = 2
-            
+
+            print("batch: ", str(batch_num), file=out_log, flush=True)
+            print("batch: ", str(batch_num))
             for i in range(hidden_dim):
+                if i % 100 == 0:
+                #if True:
+                    print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=True)
+                    print("hidden dim ", i, " of ", hidden_dim)
                 pos_i_value = pos_pooled_output[0][i]
                 neg_i_value = neg_pooled_output[0][i]
  
                 # direct effect: change input to negative, change ith neuron to positive value 
+                #print("direct effect: ") 
                 dir_logits, _ = model(neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids, modification = meta_modify(neg_pooled_output, i, pos_i_value))
 
                 # indirect effect: input positive, change ith neuron to negative value
+                #print("indirect effect: ")
                 indir_logits, _ = model(pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids, modification = meta_modify(pos_pooled_output, i, neg_i_value))
-                row[row_idx] = nn.functional.softmax(dir_logits.flatten()).tolist()
-                row[row_idx+1] = nn.functional.softmax(indir_logits.flatten()).tolist()
+                row[row_idx] = nn.functional.softmax(dir_logits.flatten(), dim=0).tolist()
+                row[row_idx+1] = nn.functional.softmax(indir_logits.flatten(), dim=0).tolist()
                 row_idx += 2
 
+                
+                #direct effect - neg logits (effect of changing ith neuron to positive)
+                if abs(row[row_idx-2][0] - row[1][0]) >= .1:
+                    print("dim: ", i, file=out_log, flush=True)
+                    print("\tneg: ", row[1], file=out_log, flush=True)
+                    print("\tdir: ", row[row_idx-2], file=out_log, flush=True)
+                    significant_direct_dims.append(i)
+                    
+                #indirect effect - pos logits (effect of changing ith neuron to negative)
+                if abs(row[row_idx-1][0] - row[0][0]) >= .1:
+                    print("dim: ", i, file=out_log, flush=True)
+                    print("\tpos: ", row[0], file=out_log, flush=True)
+                    print("\tindir: ", row[row_idx-1], file=out_log, flush=True)
+                    significant_indirect_dims.append(i)
+
             writer.writerow(row)
-            print("batch: ", str(row_idx - 2))
+            significant_dim_writer.writerow([significant_direct_dims, significant_indirect_dims])
+            batch_num += 1
 
 
 tokenizer = BertTokenizer.from_pretrained(MODEL, do_lower_case=not BERT_CASED)
 
 processor = BinaryMnliProcessor()
 num_labels = len(processor.get_labels())
-
+'''
 binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = CACHE_DIR, num_labels=num_labels)
 
 train_dataloader = processor.get_dataloader(DATA_DIR, 'binary_train', tokenizer, max_seq_len=70)
 
 print("training...")
-train(binary_model, train_dataloader, num_epochs=3, finetune=True)
-torch.save(binary_model.state_dict(), "models/binary/finetune.pt")
+train(binary_model, train_dataloader, num_epochs=3, finetune=False)
+torch.save(binary_model.state_dict(), "models/binary/no_finetune.pt")
 with open('models/binary/bert_config.json', 'w') as f:
     f.write(binary_model.config.to_json_string())
-
+'''
 print("loading model...")
 config = BertConfig('models/binary/bert_config.json')
 eval_model = BertForSequenceClassification(config, num_labels = num_labels)
@@ -122,8 +154,8 @@ eval_model.eval()
 
 pos_processor = BinaryMnliProcessor()
 neg_processor = BinaryMnliProcessor()
-pos_dataloader = pos_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 5, b_idx = 6)
-neg_dataloader = neg_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 7, b_idx = 6)
+pos_dataloader = pos_processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 6, b_idx = 7)
+neg_dataloader = neg_processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 8, b_idx = 7)
 
 evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/binary_finetune") 
 
