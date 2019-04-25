@@ -4,6 +4,8 @@ import sys
 import collections
 from tqdm import tqdm
 
+import numpy as np
+
 from pytorch_pretrained_bert import BertConfig, BertTokenizer, BertModel
 from pytorch_pretrained_bert.modeling import BertPreTrainedModel, BertConfig
 from pytorch_pretrained_bert.optimization import BertAdam
@@ -13,6 +15,8 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, TensorDataset
 
 from models import BertTokenizer, MnliProcessor, BinaryMnliProcessor, BertForSequenceClassification
+
+from utils import train, evaluate
 import copy
 
 BERT_SIZE = 'base'  # or 'large'
@@ -21,82 +25,6 @@ DATA_DIR = 'glue_data/MNLI'
 CACHE_DIR = 'cache'
 MODEL = f'bert-{BERT_SIZE}-{"cased" if BERT_CASED else "uncased"}'
 
-def train(model, dataloader, lr=5e-5, warmup=0.1, num_epochs=2, device='cuda', finetune=False):
-    #if finetune is False, freeze pretrained weights
-    if not finetune:
-        for param in model.bert.parameters():
-            param.requires_grad = False
-            
-    loss_fct = CrossEntropyLoss()
-    
-    batch_size = dataloader.batch_size
-    
-    param_optimizer = list(model.named_parameters())
-    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-    params = [
-        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-
-    optimizer = BertAdam(params, lr=lr, warmup=warmup, t_total=len(dataloader))
-
-    model.to(device)
-    
-    model.train()
-    
-    for epoch in range(num_epochs):
-        for batch in tqdm(train_dataloader):
-            batch = tuple(t.to(device) for t in batch)
-            input_ids, input_mask, segment_ids, label_ids = batch
-
-            optimizer.zero_grad()
-
-            logits, _ = model(input_ids, segment_ids, input_mask, labels=None)
-
-            loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
-            loss.backward()
-
-            optimizer.step()
-
-
-def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
-    with open(output_file_name + ".tsv", mode="w") as out_file:
-        writer = csv.writer(out_file, delimiter = '\t')
-        
-        for pos_batch, neg_batch in zip(pos_dataloader, neg_dataloader):
-            pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids = pos_batch
-            neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids = neg_batch
-        
-            pos_logits, pos_pooled_output = model(pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids)
-            neg_logits, neg_pooled_output = model(neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids)
-        
-            def meta_modify(pooled_output, idx, value):
-                def modify(pooled_output):
-                    pooled_output[0][idx] = value
-                    return pooled_output
-                return modify
-      
-            hidden_dim = pos_pooled_output.shape[1]
-            row = [None]*(hidden_dim*2+2)
-            row[0] = nn.functional.softmax(pos_logits.flatten()).tolist()
-            row[1] = nn.functional.softmax(neg_logits.flatten()).tolist()
-            row_idx = 2
-            
-            for i in range(hidden_dim):
-                pos_i_value = pos_pooled_output[0][i]
-                neg_i_value = neg_pooled_output[0][i]
- 
-                # direct effect: change input to negative, change ith neuron to positive value 
-                dir_logits, _ = model(neg_input_ids, neg_input_mask, neg_segment_ids, neg_label_ids, modification = meta_modify(neg_pooled_output, i, pos_i_value))
-
-                # indirect effect: input positive, change ith neuron to negative value
-                indir_logits, _ = model(pos_input_ids, pos_input_mask, pos_segment_ids, pos_label_ids, modification = meta_modify(pos_pooled_output, i, neg_i_value))
-                row[row_idx] = nn.functional.softmax(dir_logits.flatten()).tolist()
-                row[row_idx+1] = nn.functional.softmax(indir_logits.flatten()).tolist()
-                row_idx += 2
-
-            writer.writerow(row)
-            print("batch: ", str(row_idx - 2))
 
 
 tokenizer = BertTokenizer.from_pretrained(MODEL, do_lower_case=not BERT_CASED)
@@ -106,25 +34,39 @@ num_labels = len(processor.get_labels())
 
 binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = CACHE_DIR, num_labels=num_labels)
 
-train_dataloader = processor.get_dataloader(DATA_DIR, 'binary_train', tokenizer, max_seq_len=70)
 
-print("training...")
-train(binary_model, train_dataloader, num_epochs=3, finetune=True)
-torch.save(binary_model.state_dict(), "models/binary/finetune.pt")
-with open('models/binary/bert_config.json', 'w') as f:
-    f.write(binary_model.config.to_json_string())
+do_train = False 
+do_finetune = False 
+do_evaluate = True
 
-print("loading model...")
-config = BertConfig('models/binary/bert_config.json')
-eval_model = BertForSequenceClassification(config, num_labels = num_labels)
-eval_model.load_state_dict(torch.load("models/binary/finetune.pt"))
-eval_model.eval()
 
-pos_processor = BinaryMnliProcessor()
-neg_processor = BinaryMnliProcessor()
-pos_dataloader = pos_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 5, b_idx = 6)
-neg_dataloader = neg_processor.get_dataloader(DATA_DIR, "neg_test_mismatched", tokenizer, batch_size = 1, a_idx = 7, b_idx = 6)
+if do_finetune == True:
+    model_name = "finetune"
+else:
+    model_name = "no_finetune"
 
-evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/binary_finetune") 
+if do_train:
+    print("training...")
+    print("loading data...")
+    train_dataloader = processor.get_dataloader(DATA_DIR, 'binary_train', tokenizer, max_seq_len=70, shuffle=True)
 
+    val_dataloader = processor.get_dataloader(DATA_DIR, 'binary_dev_matched', tokenizer, max_seq_len=70, shuffle=True)
+
+    train(binary_model, train_dataloader, val_dataloader, num_labels, num_epochs=3, finetune=do_finetune, evaluate=True)
+    torch.save(binary_model.state_dict(), "models/binary/" + model_name + ".pt")
+    with open('models/binary/' + model_name + '_config.json', 'w') as f:
+        f.write(binary_model.config.to_json_string())
+
+if do_evaluate:
+    print("loading model...")
+    config = BertConfig('models/binary/' + model_name + '_config.json')
+    eval_model = BertForSequenceClassification(config, num_labels = num_labels)
+    eval_model.load_state_dict(torch.load("models/binary/" + model_name + ".pt"))
+    eval_model.eval()
+
+    print("loading data...")
+    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 6, b_idx = 7)
+    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 8, b_idx = 7)
+
+    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/binary_finetune")
 

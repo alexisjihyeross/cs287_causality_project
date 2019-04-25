@@ -92,7 +92,7 @@ class MnliProcessor():
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
-            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched":
+            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched" or set_type == "neg_dev_matched" or set_type == "neg_dev_mismatched":
                 text_a = line[a_idx]
                 text_b = line[b_idx]
                 label = "entailment"
@@ -103,8 +103,8 @@ class MnliProcessor():
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None):
-        if data_file not in ['dev_mismatched', 'dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'train', 'small_train']:
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, **kwargs):
+        if data_file not in ['dev_mismatched', 'dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'neg_dev_matched', 'neg_dev_mismatched','train', 'small_train']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
@@ -114,7 +114,7 @@ class MnliProcessor():
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)
         dataset = [torch.tensor(d, dtype=torch.long) for d in zip(*train_feats)]
 
-        return DataLoader(TensorDataset(*dataset), batch_size=batch_size)
+        return DataLoader(TensorDataset(*dataset), batch_size=batch_size, **kwargs)
 
 class BinaryMnliProcessor():
     """Processor for the MultiNLI data set with neutral examples removed."""
@@ -141,7 +141,7 @@ class BinaryMnliProcessor():
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
-            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched":
+            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched" or set_type == "neg_dev_matched" or set_type == "neg_dev_mismatched":
                 text_a = line[a_idx]
                 text_b = line[b_idx]
                 label = "entailment"
@@ -152,8 +152,8 @@ class BinaryMnliProcessor():
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None):
-        if data_file not in ['binary_dev_mismatched', 'binary_dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'binary_train', 'small_binary_train']:
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, **kwargs):
+        if data_file not in ['binary_dev_mismatched', 'binary_dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'neg_dev_matched', 'neg_dev_mismatched', 'binary_train', 'small_binary_train']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
@@ -163,7 +163,7 @@ class BinaryMnliProcessor():
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)
         dataset = [torch.tensor(d, dtype=torch.long) for d in zip(*train_feats)]
 
-        return DataLoader(TensorDataset(*dataset), batch_size=batch_size)
+        return DataLoader(TensorDataset(*dataset), batch_size=batch_size, **kwargs)
 
 class BertForSequenceClassification(BertPreTrainedModel):
     """BERT model w/ pooled output to linear layer 
@@ -187,7 +187,7 @@ class BertForSequenceClassification(BertPreTrainedModel):
         self.classifier = nn.Linear(config.hidden_size, num_labels)
         self.apply(self.init_bert_weights)
 
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, labels=None, modification=None):
+    def forward(self, input_ids, token_type_ids=None, attention_mask=None, modification=None):
         _, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
         
         if modification:
@@ -197,10 +197,3 @@ class BertForSequenceClassification(BertPreTrainedModel):
         logits = self.classifier(pooled_output)
 
         return logits, pooled_output
-
-#        if labels is not None:
-#            loss_fct = CrossEntropyLoss()
-#            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-#            return loss, pooled_output
-#        else:
-#            return logits, pooled_output
