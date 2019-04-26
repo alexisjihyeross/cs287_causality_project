@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="cs287@40.114.1.119:22" showNewOnTargetInSync="false">
+    <serverData>
+      <paths name="cs287@40.114.1.119:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/cs287/cs287_causality_project" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
