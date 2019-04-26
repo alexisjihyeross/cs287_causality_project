@@ -85,7 +85,7 @@ class MnliProcessor():
         """Gets the list of labels for this data set."""
         return ["contradiction", "entailment", "neutral"]
 
-    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None):
+    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None, label_idx = None):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
@@ -95,7 +95,10 @@ class MnliProcessor():
             if set_type == "neg_test_matched" or set_type == "neg_test_mismatched" or set_type == "neg_dev_matched" or set_type == "neg_dev_mismatched":
                 text_a = line[a_idx]
                 text_b = line[b_idx]
-                label = "entailment"
+                if label_idx == None:
+                    label = "entailment"
+                else:
+                    label = line[label_idx]
             else:
                 text_a = line[8]
                 text_b = line[9]
@@ -103,12 +106,12 @@ class MnliProcessor():
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, **kwargs):
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, label_idx = None, **kwargs):
         if data_file not in ['dev_mismatched', 'dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'neg_dev_matched', 'neg_dev_mismatched','train', 'small_train']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
-        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx)
+        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx, label_idx = label_idx)
         labels = self.get_labels()
 
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)
@@ -134,17 +137,20 @@ class BinaryMnliProcessor():
         """Gets the list of labels for this data set."""
         return ["contradiction", "entailment"]
 
-    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None):
+    def _create_examples(self, lines, set_type, a_idx = None, b_idx = None, label_idx = None):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, line) in enumerate(lines):
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
-            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched" or set_type == "neg_dev_matched" or set_type == "neg_dev_mismatched":
+            if set_type == "neg_test_matched" or set_type == "neg_test_mismatched" or set_type == "neg_dev_matched" or set_type == "neg_dev_mismatched" or set_type == "neg_binary_dev_matched" or set_type == "neg_binary_dev_mismatched" or set_type == "SAMPLE_neg_binary_dev_mismatched.tsv":
                 text_a = line[a_idx]
                 text_b = line[b_idx]
-                label = "entailment"
+                if label_idx == None:
+                    label = "entailment"
+                else:
+                    label = line[label_idx]
             else:
                 text_a = line[8]
                 text_b = line[9]
@@ -152,12 +158,12 @@ class BinaryMnliProcessor():
             examples.append(InputExample(guid, text_a, text_b, label))
         return examples
 
-    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, **kwargs):
-        if data_file not in ['binary_dev_mismatched', 'binary_dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'neg_dev_matched', 'neg_dev_mismatched', 'binary_train', 'small_binary_train']:
+    def get_dataloader(self, data_dir, data_file, tokenizer, batch_size=10, max_seq_len=70, a_idx = None, b_idx = None, label_idx = None, **kwargs):
+        if data_file not in ['binary_dev_mismatched', 'binary_dev_matched', 'test_matched', 'test_mismatched', 'neg_test_matched', 'neg_test_mismatched', 'neg_dev_matched', 'neg_dev_mismatched', 'neg_binary_dev_matched', 'neg_binary_dev_mismatched', 'binary_train', 'small_binary_train', 'SAMPLE_neg_binary_dev_mismatched']:
             raise KeyError(f'Invalid data file {data_file}')
 
         data = self._read_tsv(os.path.join(data_dir, f"{data_file}.tsv"))
-        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx)
+        examples = self._create_examples(data, data_file, a_idx = a_idx, b_idx = b_idx, label_idx = label_idx)
         labels = self.get_labels()
 
         train_feats = convert_examples_to_features(examples, labels, max_seq_len, tokenizer)

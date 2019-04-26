@@ -98,30 +98,47 @@ def train(model, dataloader, val_dataloader, num_labels, lr=5e-5, warmup=0.1, nu
 
         print(f"val acc: {correct / max(total, 1)}, {zero_cnt} zeros, {one_cnt} ones, {two_cnt} twos of {total} loss: ", val_loss)
 
-def simple_evaluate(model, dataloader, device='cuda'):
+def simple_evaluate(model, dataloader, output_file_name, device='cpu'):
     correct, total = 0, 0
 
-    for i, batch in enumerate(dataloader):
-        batch = tuple(t.to(device) for t in batch)
-        input_ids, input_mask, segment_ids, label_ids = batch
-        logits, _ = model(input_ids, input_mask, segment_ids)
-        print(logits.argmax(dim=1), label_ids)
-        correct_in_batch = logits.argmax(dim=1) == label_ids
-        correct += len(correct_in_batch.nonzero())
-        total += len(label_ids)
-        
-        if i % 100 == 0:
-            print(f"epoch {i} accuracy {correct / total}")
-
+    with open(output_file_name + ".tsv", mode = "w") as out_file:
+        writer = csv.writer(out_file, delimiter = '\t')
+        for i, batch in enumerate(dataloader):
+            batch = tuple(t.to(device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids = batch
+            logits, _ = model(input_ids, input_mask, segment_ids)
+            #print(logits.argmax(dim=1), label_ids)
+            correct_in_batch = logits.argmax(dim=1) == label_ids
+            correct += len(correct_in_batch.nonzero())
+            total += len(label_ids)
+            #print("preds: ", logits.argmax(dim=1))
+            #print("original labels: ", label_ids)
+            '''
+            for j in range((correct_in_batch).size(0)):
+                if correct_in_batch[j] == 1:
+                    print(input_ids[j])
+                    print(label_ids[j])
+            '''
+            #if i % 100 == 0:
+            #    print(f"batch{i} accuracy {correct / total}")
+           
+            if i % 10 == 0:
+                print ("batch", i, "out of ", len(dataloader))
+            preds = logits.argmax(dim=1)
+            for j in range(preds.size(0)):
+                writer.writerow([preds[j].item()])
+   
     return correct / total
 
 
-def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
+def evaluate(model, pos_dataloader, neg_dataloader, output_file_name, FLUSH_FLAG=True, DEBUG=False):
     with open(output_file_name + ".tsv", mode="w") as out_file, open(output_file_name + ".txt", mode="w") as out_log, open(output_file_name + "_significant_dim.tsv", mode="w") as significant_dim_file:
         writer = csv.writer(out_file, delimiter = '\t')
         significant_dim_writer = csv.writer(significant_dim_file, delimiter = '\t') 
         significant_dim_writer.writerow(["direct_effect_dimensions", "indirect_effect_dimensions"])
         batch_num = 0
+        if DEBUG:
+            offset = 0
         for pos_batch, neg_batch in (zip(pos_dataloader, neg_dataloader)):
             significant_direct_dims = []
             significant_indirect_dims = []
@@ -149,12 +166,12 @@ def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
             print("pos_logits: ", pos_logits)
             print("neg_logits: ", neg_logits)
 
-            print("batch: ", str(batch_num), file=out_log, flush=False)
+            print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
             for i in range(hidden_dim):
                 if i % 10 == 0:
                 #if True:
-                    print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=False)
+                    print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=FLUSH_FLAG)
                     print("hidden dim ", i, " of ", hidden_dim)
                 pos_i_value = pos_pooled_output[0][i]
                 neg_i_value = neg_pooled_output[0][i]
@@ -173,9 +190,9 @@ def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
                 
                 #direct effect - neg logits (effect of changing ith neuron to positive)
                 if abs(row[row_idx-2][0] - row[1][0]) >= .1:
-                    print("dim: ", i, file=out_log, flush=False)
-                    print("\tneg: ", row[1], file=out_log, flush=False)
-                    print("\tdir: ", row[row_idx-2], file=out_log, flush=False)
+                    print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
+                    print("\tneg: ", row[1], file=out_log, flush=FLUSH_FLAG)
+                    print("\tdir: ", row[row_idx-2], file=out_log, flush=FLUSH_FLAG)
                     significant_direct_dims.append(i)
                     print("dim: ", i)
                     print("\tneg: ", row[1])
@@ -183,14 +200,25 @@ def evaluate(model, pos_dataloader, neg_dataloader, output_file_name):
                     
                 #indirect effect - pos logits (effect of changing ith neuron to negative)
                 if abs(row[row_idx-1][0] - row[0][0]) >= .1:
-                    print("dim: ", i, file=out_log, flush=False)
-                    print("\tpos: ", row[0], file=out_log, flush=False)
-                    print("\tindir: ", row[row_idx-1], file=out_log, flush=False)
+                    print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
+                    print("\tpos: ", row[0], file=out_log, flush=FLUSH_FLAG)
+                    print("\tindir: ", row[row_idx-1], file=out_log, flush=FLUSH_FLAG)
                     significant_indirect_dims.append(i)
                     print("dim: ", i)
                     print("\tpos: ", row[0])
                     print("\tindir: ", row[row_idx-1])
 
+
             writer.writerow(row)
+            if DEBUG:
+                if line_count(output_file_name + ".tsv") >  batch_num + 1 - offset:
+                    print("AN ERROR OCCURED IN LINE NUMS HERE", file=out_log)
+                    offset += 1
             significant_dim_writer.writerow([significant_direct_dims, significant_indirect_dims])
             batch_num += 1
+
+def line_count(fname):
+    with open(fname, "r") as f:
+        for i, _ in enumerate(f):
+            pass
+        return i

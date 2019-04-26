@@ -1,0 +1,467 @@
+batch:  0
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  1
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  2
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  3
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  4
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  5
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  6
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  7
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  8
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  9
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  10
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  11
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  12
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  13
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  14
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  15
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  16
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  17
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  18
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  19
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  20
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  21
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  22
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  23
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  24
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  25
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  26
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  27
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  28
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  29
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  30
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  31
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  32
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  33
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  34
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  35
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  36
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  37
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  38
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  39
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  40
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  41
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  42
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  43
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  44
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  45
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  46
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  47
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  48
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  49
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  50
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
+hidden dim  700  of  768
+batch:  51
+hidden dim  0  of  768
+hidden dim  100  of  768
+hidden dim  200  of  768
+hidden dim  300  of  768
+hidden dim  400  of  768
+hidden dim  500  of  768
+hidden dim  600  of  768
