@@ -35,16 +35,12 @@ num_labels = len(processor.get_labels())
 binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = CACHE_DIR, num_labels=num_labels)
 
 
-do_train = False 
-do_finetune = True 
-do_evaluate = False
-other = True
+do_train = False
+do_finetune = True
+do_evaluate = True
+other = False
 
-
-if do_finetune == True:
-    model_name = "finetune"
-else:
-    model_name = "no_finetune"
+model_name = 'finetune' if do_finetune else 'no_finetune'
 
 if do_train:
     print("training...")
