@@ -36,7 +36,7 @@ binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = 
 
 
 do_train = False
-do_finetune = True
+do_finetune = False
 do_evaluate = False
 other = True
 
@@ -76,7 +76,7 @@ if other:
     eval_model.eval()
     eval_pos_dataloader = processor.get_dataloader(DATA_DIR, "binary_dev_mismatched", tokenizer, batch_size = 10, a_idx = 6, b_idx = 7, label_idx = 5)
     #eval_neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_binary_dev_mismatched", tokenizer, batch_size = 10, a_idx = 8, b_idx = 7, label_idx = 5)
-    simple_evaluate(eval_model, eval_pos_dataloader, "experiments/binary_finetune_pos_preds")
+    simple_evaluate(eval_model, eval_pos_dataloader, "experiments/binary_" + model_name + "_pos_preds")
     #simple_evaluate(eval_model, eval_neg_dataloader, "experiments/binary_finetune_neg_preds")
 
 
