@@ -96,6 +96,7 @@ def train(model,
 
         model.eval()
         val_loss = 0
+        correct, total, zero_cnt, one_cnt, two_cnt, total_loss = 0, 0, 0, 0, 0, 0
         for i, batch in tqdm(enumerate(val_dataloader)):
             batch = tuple(t.to(device) for t in batch)
             input_ids, input_mask, segment_ids, label_ids = batch
@@ -117,15 +118,16 @@ def train(model,
             val_loss)
 
 
-def simple_evaluate(model, dataloader, output_file_name, device='cpu'):
-    correct, total = 0, 0
+def simple_evaluate(model, dataloader, output_file_name, device='cuda:0'):
+    correct, total, zero_cnt, one_cnt, two_cnt  = 0, 0, 0, 0, 0
 
     with open(output_file_name + ".tsv", mode="w") as out_file:
         writer = csv.writer(out_file, delimiter='\t')
         for i, batch in enumerate(dataloader):
             batch = tuple(t.to(device) for t in batch)
             input_ids, input_mask, segment_ids, label_ids = batch
-            logits, _ = model(input_ids, input_mask, segment_ids)
+            logits, _ = model(input_ids, segment_ids, input_mask)
+            #print(logits.argmax(dim=1), label_ids)
 
             correct_in_batch = logits.argmax(dim=1) == label_ids
             correct += len(correct_in_batch.nonzero())
@@ -147,7 +149,12 @@ def simple_evaluate(model, dataloader, output_file_name, device='cpu'):
             for j in range(preds.size(0)):
                 writer.writerow([preds[j].item()])
 
-    return correct / total
+            zero_cnt += len((preds == 0).nonzero())
+            one_cnt += len((preds == 1).nonzero())
+            two_cnt += len((preds == 2).nonzero())
+        print(zero_cnt, " 0s; ", one_cnt, " 1s; ", two_cnt, " 2s")
+        print("val acc: ", correct / total)
+
 
 
 def evaluate(model,
@@ -252,4 +259,4 @@ def line_count(fname):
     with open(fname, "r") as f:
         for i, _ in enumerate(f):
             pass
-        return i
+        return i + 1
