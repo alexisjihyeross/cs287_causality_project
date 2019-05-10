@@ -260,7 +260,14 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         return logits, pooled_output
 
-def modified_forward(model, input_ids, token_type_ids=None, attention_mask=None, output_all_encoded_layers=True, modification=None):
+
+def post_modification(model, sequence_output):
+    pooled_output = model.bert.pooler(sequence_output)
+    return model.classifier(pooled_output)
+
+
+def modified_forward(model, batch, output_all_encoded_layers=True, modification=None):
+    input_ids, attention_mask, token_type_ids, _ = batch
     bert = model.bert
     attention_mask = torch.ones_like(input_ids) if attention_mask is None else attention_mask
     token_type_ids = torch.zeros_like(input_ids) if token_type_ids is None else token_type_ids
@@ -284,5 +291,4 @@ def modified_forward(model, input_ids, token_type_ids=None, attention_mask=None,
     pooled_output = model.dropout(pooled_output)
     logits = model.classifier(pooled_output)
 
-    return logits, pooled_output
-
+    return logits, pooled_output, sequence_output
