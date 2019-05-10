@@ -195,11 +195,38 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, modification=None):
         _, pooled_output = self.bert(input_ids, token_type_ids, attention_mask, output_all_encoded_layers=False)
-        
+
         if modification:
             pooled_output = modification(pooled_output)
-        
+
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier(pooled_output)
 
         return logits, pooled_output
+
+def modified_forward(model, input_ids, token_type_ids=None, attention_mask=None, output_all_encoded_layers=True, modification=None):
+    bert = model.bert
+    attention_mask = torch.ones_like(input_ids) if attention_mask is None else attention_mask
+    token_type_ids = torch.zeros_like(input_ids) if token_type_ids is None else token_type_ids
+    ext_attn_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+
+    ext_attn_mask = ext_attn_mask.to(dtype=next(bert.parameters()).dtype)
+    ext_attn_mask = (1.0 - ext_attn_mask) * -10000.0
+
+    emb_output = bert.embeddings(input_ids, token_type_ids)
+    encoded_layers = bert.encoder(emb_output,
+                                  ext_attn_mask,
+                                  output_all_encoded_layers=output_all_encoded_layers)
+    sequence_output = encoded_layers[-1]
+
+    if modification:
+        print(sequence_output[:, 0].shape)
+        sequence_output[:, 0] = modification(sequence_output[:, 0])
+
+    pooled_output = bert.pooler(sequence_output)
+
+    pooled_output = model.dropout(pooled_output)
+    logits = model.classifier(pooled_output)
+
+    return logits, pooled_output
+
