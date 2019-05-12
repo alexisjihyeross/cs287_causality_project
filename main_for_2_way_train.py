@@ -37,8 +37,8 @@ full_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = CA
 
 do_train = False
 do_finetune = True
-do_evaluate = False
-other = True
+do_evaluate = True
+other = False
 
 
 if do_finetune == True:
@@ -67,11 +67,11 @@ if do_evaluate:
     eval_model.load_state_dict(torch.load("models/full_two_way/" + model_name + ".pt"))
     #eval_model.to('cuda:0')
     eval_model.eval()
-"
-    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 1, a_idx=6,b_idx=7)
-    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 1, a_idx=8, b_idx=7)
 
-    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may7/three_way_finetune", DEBUG=True)
+    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 10, a_idx=6,b_idx=7)
+    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 10, a_idx=8, b_idx=7)
+
+    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may10/three_way_finetune", DEBUG=True)
 
 
 if other:
