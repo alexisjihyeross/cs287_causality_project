@@ -161,7 +161,7 @@ def evaluate(model,
              pos_dataloader,
              neg_dataloader,
              output_file_name,
-             modify_linear=False,
+             modify_layer=3,
              FLUSH_FLAG=True,
              DEBUG=False):
     with open(output_file_name + ".tsv", mode="w") as out_file, open(
@@ -181,23 +181,25 @@ def evaluate(model,
             significant_indirect_dims = []
 
             # print("pos: ")
-            pos_logits, pos_pooled_output, pos_seq_out = modified_forward(model, pos_batch)
+            pos_logits, pos_attn, pos_modify_output = modified_forward(model, pos_batch, modify_layer=modify_layer)
 
-            # print("neg: ")
-            neg_logits, neg_pooled_output, neg_seq_out = modified_forward(model, neg_batch)
+            # print("neg: "n)
+            neg_logits, neg_attn, neg_modify_output = modified_forward(model, neg_batch, modify_layer=modify_layer)
 
-            def meta_modify(idx, value):
-                def modify(output):
-                    output[0, idx] = value
-                    return output
-                return modify
+            print(pos_modify_output.shape)
+            hidden_dim = pos_modify_output.shape[-1]
 
-            if modify_linear:
+            row = [None] * (hidden_dim * 2 + 2)
+            row[0] = nn.functional.softmax(pos_logits.flatten(), dim=0).tolist()
+            row[1] = nn.functional.softmax(neg_logits.flatten(), dim=0).tolist()
+            row_idx = 2
+
+            if modify_layer == 1:
                 print('trying fast')
                 # store VW = v_i * w_i for all i, pos and neg
                 W = model.classifier.weight
-                pos_VW = torch.einsum('bh,mh->bmh', pos_pooled_output, W)
-                neg_VW = torch.einsum('bh,mh->bmh', neg_pooled_output, W)
+                pos_VW = torch.einsum('bh,mh->bmh', pos_modify_output, W)
+                neg_VW = torch.einsum('bh,mh->bmh', neg_modify_output, W)
 
                 # difference vi,wi - vi',wi across hidden dimension for all i
                 diff = pos_VW - neg_VW
@@ -205,15 +207,6 @@ def evaluate(model,
                 # compute logits - vi,wi + vi',wi for each i
                 pL = nn.functional.softmax(pos_logits.unsqueeze(dim=2) - diff, dim=1)
                 nL = nn.functional.softmax(neg_logits.unsqueeze(dim=2) + diff, dim=1)
-
-                hidden_dim = model.classifier.in_features
-            else:
-                hidden_dim = model.bert.pooler.dense.in_features
-
-            row = [None] * (hidden_dim * 2 + 2)
-            row[0] = nn.functional.softmax(pos_logits.flatten(), dim=0).tolist()
-            row[1] = nn.functional.softmax(neg_logits.flatten(), dim=0).tolist()
-            row_idx = 2
 
             print(hidden_dim)
 
@@ -223,7 +216,7 @@ def evaluate(model,
             print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
             for i in range(hidden_dim):
-                if modify_linear:
+                if modify_layer == 1:
                     row[row_idx] = nL[:, :, i].flatten().tolist()
                     row[row_idx + 1] = pL[:, :, i].flatten().tolist()
                     row_idx += 2
@@ -235,15 +228,15 @@ def evaluate(model,
 
                     # direct effect: change input to negative, change ith neuron to positive value 
                     #print("direct effect: ") 
-                    nso = neg_seq_out.clone().detach()
-                    nso[:, 0][0, i] = pos_seq_out[:, 0][0, i]
-                    dir_logits = post_modification(model, nso)
+                    nso = neg_modify_output.clone().detach()
+                    nso[0, ..., i] = pos_modify_output[0, ..., i]
+                    dir_logits = post_modification(model, nso, neg_attn, layer=modify_layer)
 
                     # indirect effect: input positive, change ith neuron to negative value
                     #print("indirect effect: ")
-                    pso = pos_seq_out.clone().detach()
-                    pso[:, 0][0, i] = neg_seq_out[:, 0][0, i]
-                    indir_logits = post_modification(model, pso)
+                    pso = pos_modify_output.clone().detach()
+                    pso[0, ..., i] = neg_modify_output[0, ..., i]
+                    indir_logits = post_modification(model, pso, pos_attn, layer=modify_layer)
                     row[row_idx] = nn.functional.softmax(dir_logits.flatten(), dim=0).tolist()
                     row[row_idx+1] = nn.functional.softmax(indir_logits.flatten(), dim=0).tolist()
                     row_idx += 2

@@ -37,8 +37,8 @@ binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = 
 
 do_train = False
 do_finetune = False
-do_evaluate = False
-other = True
+do_evaluate = True
+other = False
 
 model_name = 'finetune' if do_finetune else 'no_finetune'
 
@@ -56,9 +56,10 @@ if do_train:
 
 if do_evaluate:
     print("loading model...")
-    config = BertConfig('models/binary/' + model_name + '_config.json')
-    eval_model = BertForSequenceClassification(config, num_labels = num_labels)
-    eval_model.load_state_dict(torch.load("models/binary/" + model_name + ".pt"))
+    # config = BertConfig('models/binary/' + model_name + '_config.json')
+    # eval_model = BertForSequenceClassification(config, num_labels = num_labels)
+    # eval_model.load_state_dict(torch.load("models/binary/" + model_name + ".pt"))
+    eval_model = binary_model
     eval_model.eval()
 
     print("loading data...")

@@ -261,12 +261,25 @@ class BertForSequenceClassification(BertPreTrainedModel):
         return logits, pooled_output
 
 
-def post_modification(model, sequence_output):
-    pooled_output = model.bert.pooler(sequence_output)
-    return model.classifier(pooled_output)
+def post_modification(model, modified, attn_mask, layer=1):
+    bert = model.bert
+
+    # In encoder
+    if layer >= 3:
+        for layer_module in bert.encoder.layer[-layer + 2:]:
+            modified = layer_module(modified, attn_mask)
+        modified = modified[:, 0]
+
+    # In pooler
+    if layer >= 2:
+        modified = bert.pooler.dense(modified)
+        modified = bert.pooler.activation(modified)
+
+    # linear layer
+    return model.classifier(modified)
 
 
-def modified_forward(model, batch, output_all_encoded_layers=True, modification=None):
+def modified_forward(model, batch, modify_layer=1):
     input_ids, attention_mask, token_type_ids, _ = batch
     bert = model.bert
     attention_mask = torch.ones_like(input_ids) if attention_mask is None else attention_mask
@@ -277,18 +290,23 @@ def modified_forward(model, batch, output_all_encoded_layers=True, modification=
     ext_attn_mask = (1.0 - ext_attn_mask) * -10000.0
 
     emb_output = bert.embeddings(input_ids, token_type_ids)
-    encoded_layers = bert.encoder(emb_output,
-                                  ext_attn_mask,
-                                  output_all_encoded_layers=output_all_encoded_layers)
-    sequence_output = encoded_layers[-1]
 
-    if modification:
-        print(sequence_output[:, 0].shape)
-        sequence_output[:, 0] = modification(sequence_output[:, 0])
+    outputs = []
+    for layer_module in bert.encoder.layer:
+        outputs.append(emb_output)
+        emb_output = layer_module(emb_output, ext_attn_mask)
 
-    pooled_output = bert.pooler(sequence_output)
+    sequence_output = emb_output
+
+    sequence_output = sequence_output[:, 0]
+    outputs.append(sequence_output)
+
+    pooled_output = bert.pooler.dense(sequence_output)
+    pooled_output = bert.pooler.activation(pooled_output)
+
+    outputs.append(pooled_output)
 
     pooled_output = model.dropout(pooled_output)
     logits = model.classifier(pooled_output)
 
-    return logits, pooled_output, sequence_output
+    return logits, ext_attn_mask, outputs[-modify_layer]

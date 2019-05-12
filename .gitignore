@@ -2,3 +2,4 @@
 __pycache__/
 glue_data/
 cache/
+.ipynb_checkpoints/
