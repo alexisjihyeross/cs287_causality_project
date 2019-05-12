@@ -164,7 +164,6 @@ def evaluate(model,
              modify_layer=1,
              FLUSH_FLAG=True,
              DEBUG=False):
-    batch_size = pos_dataloader.batch_size
     with open(output_file_name + ".tsv", mode="w") as out_file, open(output_file_name + ".txt", mode="w") as out_log, open(output_file_name + "_significant_dim.tsv", mode="w") as significant_dim_file, open(output_file_name + "_pos_layer_activation.tsv", mode="w") as pos_layer_activation_file, open(output_file_name + "_neg_layer_activation.tsv", mode="w") as neg_layer_activation_file:
         writer = csv.writer(out_file, delimiter='\t')
         pos_layer_activation_writer = csv.writer(pos_layer_activation_file, delimiter='\t')
@@ -180,11 +179,14 @@ def evaluate(model,
             significant_direct_dims = []
             significant_indirect_dims = []
 
+
             # print("pos: ")
             pos_logits, pos_attn, pos_modify_output = modified_forward(model, pos_batch, modify_layer=modify_layer)
 
             # print("neg: "n)
             neg_logits, neg_attn, neg_modify_output = modified_forward(model, neg_batch, modify_layer=modify_layer)
+
+            batch_size = neg_logits.shape[0]
 
             hidden_dim = pos_modify_output.shape[-1]
 
