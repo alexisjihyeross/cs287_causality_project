@@ -187,12 +187,6 @@ def evaluate(model,
             # print("neg: ")
             neg_logits, neg_pooled_output, neg_seq_out = modified_forward(model, neg_batch)
 
-            # def meta_modify(idx, value):
-            #     def modify(output):
-            #         output[0, idx] = value
-            #         return output
-            #     return modify
-
             if modify_linear:
                 print('trying fast')
                 # store VW = v_i * w_i for all i, pos and neg
