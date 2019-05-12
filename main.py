@@ -36,7 +36,7 @@ binary_model = BertForSequenceClassification.from_pretrained(MODEL, cache_dir = 
 
 
 do_train = False
-do_finetune = False
+do_finetune = True
 do_evaluate = True
 other = False
 
@@ -56,18 +56,18 @@ if do_train:
 
 if do_evaluate:
     print("loading model...")
-    # config = BertConfig('models/binary/' + model_name + '_config.json')
-    # eval_model = BertForSequenceClassification(config, num_labels = num_labels)
-    # eval_model.load_state_dict(torch.load("models/binary/" + model_name + ".pt"))
-    eval_model = binary_model
+    config = BertConfig('models/binary/' + model_name + '_config.json')
+    eval_model = BertForSequenceClassification(config, num_labels = num_labels)
+    eval_model.load_state_dict(torch.load("models/binary/" + model_name + ".pt"))
+    # eval_model = binary_model
     eval_model.eval()
 
     print("loading data...")
     # Note these are different, see indices
-    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 6, b_idx = 7)
-    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 8, b_idx = 7)
+    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 10, a_idx = 6, b_idx = 7)
+    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 10, a_idx = 8, b_idx = 7)
 
-    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may7/binary_finetune", DEBUG=True)
+    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may10/binary_finetune", DEBUG=True)
 
 if other:
     config = BertConfig('models/binary/' + model_name + '_config.json')

@@ -30,12 +30,12 @@ MODEL = f'bert-{BERT_SIZE}-{"cased" if BERT_CASED else "uncased"}'
 #options are full_two_way, binary
 which_model = "binary"
 do_finetune = True
-exp_folder = "may9"
+exp_folder = "may10"
 preds_file = "neg_dev_matched"
 
 
-get_preds = False
-get_effects = True
+get_preds = False 
+get_effects = True 
 
 model_name = 'finetune' if do_finetune else 'no_finetune'
 

@@ -164,6 +164,7 @@ def evaluate(model,
              modify_layer=3,
              FLUSH_FLAG=True,
              DEBUG=False):
+    batch_size = pos_dataloader.batch_size
     with open(output_file_name + ".tsv", mode="w") as out_file, open(
             output_file_name + ".txt", mode="w") as out_log, open(
                 output_file_name + "_significant_dim.tsv",
@@ -189,9 +190,9 @@ def evaluate(model,
             print(pos_modify_output.shape)
             hidden_dim = pos_modify_output.shape[-1]
 
-            row = [None] * (hidden_dim * 2 + 2)
-            row[0] = nn.functional.softmax(pos_logits.flatten(), dim=0).tolist()
-            row[1] = nn.functional.softmax(neg_logits.flatten(), dim=0).tolist()
+            row = torch.zeros(2 * hidden_dim + 2, batch_size, 2)
+            row[0] = nn.functional.softmax(pos_logits, dim=1)
+            row[1] = nn.functional.softmax(neg_logits, dim=1)
             row_idx = 2
 
             if modify_layer == 1:
@@ -237,45 +238,48 @@ def evaluate(model,
                     pso = pos_modify_output.clone().detach()
                     pso[0, ..., i] = neg_modify_output[0, ..., i]
                     indir_logits = post_modification(model, pso, pos_attn, layer=modify_layer)
-                    row[row_idx] = nn.functional.softmax(dir_logits.flatten(), dim=0).tolist()
-                    row[row_idx+1] = nn.functional.softmax(indir_logits.flatten(), dim=0).tolist()
+                    row[row_idx] = nn.functional.softmax(dir_logits, dim=1)
+                    row[row_idx+1] = nn.functional.softmax(indir_logits, dim=1)
                     row_idx += 2
 
-                #direct effect - neg logits (effect of changing ith neuron to positive)
-                if abs(row[row_idx - 2][0] - row[1][0]) >= .1:
-                    print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
-                    print("\tneg: ", row[1], file=out_log, flush=FLUSH_FLAG)
-                    print("\tdir: ",
-                          row[row_idx - 2],
-                          file=out_log,
-                          flush=FLUSH_FLAG)
-                    significant_direct_dims.append(i)
-                    print("dim: ", i)
-                    print("\tneg: ", row[1])
-                    print("\tdir: ", row[row_idx - 2])
+                # #direct effect - neg logits (effect of changing ith neuron to positive)
+                #
+                # if abs(row[row_idx - 2][0] - row[1][0]) >= .1:
+                #     print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
+                #     print("\tneg: ", row[1], file=out_log, flush=FLUSH_FLAG)
+                #     print("\tdir: ",
+                #           row[row_idx - 2],
+                #           file=out_log,
+                #           flush=FLUSH_FLAG)
+                #     significant_direct_dims.append(i)
+                #     print("dim: ", i)
+                #     print("\tneg: ", row[1])
+                #     print("\tdir: ", row[row_idx - 2])
+                #
+                # #indirect effect - pos logits (effect of changing ith neuron to negative)
+                # if abs(row[row_idx - 1][0] - row[0][0]) >= .1:
+                #     print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
+                #     print("\tpos: ", row[0], file=out_log, flush=FLUSH_FLAG)
+                #     print("\tindir: ",
+                #           row[row_idx - 1],
+                #           file=out_log,
+                #           flush=FLUSH_FLAG)
+                #     significant_indirect_dims.append(i)
+                #     print("dim: ", i)
+                #     print("\tpos: ", row[0])
+                #     print("\tindir: ", row[row_idx - 1])
 
-                #indirect effect - pos logits (effect of changing ith neuron to negative)
-                if abs(row[row_idx - 1][0] - row[0][0]) >= .1:
-                    print("dim: ", i, file=out_log, flush=FLUSH_FLAG)
-                    print("\tpos: ", row[0], file=out_log, flush=FLUSH_FLAG)
-                    print("\tindir: ",
-                          row[row_idx - 1],
-                          file=out_log,
-                          flush=FLUSH_FLAG)
-                    significant_indirect_dims.append(i)
-                    print("dim: ", i)
-                    print("\tpos: ", row[0])
-                    print("\tindir: ", row[row_idx - 1])
+            for b in range(batch_size):
 
-            writer.writerow(row)
-            if DEBUG:
-                if line_count(output_file_name +
-                              ".tsv") > batch_num + 1 - offset:
-                    print("AN ERROR OCCURED IN LINE NUMS HERE", file=out_log)
-                    offset += 1
-            significant_dim_writer.writerow(
-                [significant_direct_dims, significant_indirect_dims])
-            batch_num += 1
+                writer.writerow(row[:, b, :].tolist())
+                # if DEBUG:
+                #     if line_count(output_file_name +
+                #                   ".tsv") > batch_num + 1 - offset:
+                #         print("AN ERROR OCCURED IN LINE NUMS HERE", file=out_log)
+                #         offset += 1
+                # significant_dim_writer.writerow(
+                #     [significant_direct_dims, significant_indirect_dims])
+                batch_num += 1
 
 
 def line_count(fname):
