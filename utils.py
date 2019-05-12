@@ -161,15 +161,14 @@ def evaluate(model,
              pos_dataloader,
              neg_dataloader,
              output_file_name,
-             modify_layer=3,
+             modify_layer=1,
              FLUSH_FLAG=True,
              DEBUG=False):
     batch_size = pos_dataloader.batch_size
-    with open(output_file_name + ".tsv", mode="w") as out_file, open(
-            output_file_name + ".txt", mode="w") as out_log, open(
-                output_file_name + "_significant_dim.tsv",
-                mode="w") as significant_dim_file:
+    with open(output_file_name + ".tsv", mode="w") as out_file, open(output_file_name + ".txt", mode="w") as out_log, open(output_file_name + "_significant_dim.tsv", mode="w") as significant_dim_file, open(output_file_name + "_pos_layer_activation.tsv", mode="w") as pos_layer_activation_file, open(output_file_name + "_neg_layer_activation.tsv", mode="w") as neg_layer_activation_file:
         writer = csv.writer(out_file, delimiter='\t')
+        pos_layer_activation_writer = csv.writer(pos_layer_activation_file, delimiter='\t')
+        neg_layer_activation_writer = csv.writer(neg_layer_activation_file, delimiter='\t')
         significant_dim_writer = csv.writer(significant_dim_file,
                                             delimiter='\t')
         significant_dim_writer.writerow(
@@ -187,7 +186,6 @@ def evaluate(model,
             # print("neg: "n)
             neg_logits, neg_attn, neg_modify_output = modified_forward(model, neg_batch, modify_layer=modify_layer)
 
-            print(pos_modify_output.shape)
             hidden_dim = pos_modify_output.shape[-1]
 
             row = torch.zeros(2 * hidden_dim + 2, batch_size, 2)
@@ -195,52 +193,31 @@ def evaluate(model,
             row[1] = nn.functional.softmax(neg_logits, dim=1)
             row_idx = 2
 
-            if modify_layer == 1:
-                print('trying fast')
-                # store VW = v_i * w_i for all i, pos and neg
-                W = model.classifier.weight
-                pos_VW = torch.einsum('bh,mh->bmh', pos_modify_output, W)
-                neg_VW = torch.einsum('bh,mh->bmh', neg_modify_output, W)
-
-                # difference vi,wi - vi',wi across hidden dimension for all i
-                diff = pos_VW - neg_VW
-
-                # compute logits - vi,wi + vi',wi for each i
-                pL = nn.functional.softmax(pos_logits.unsqueeze(dim=2) - diff, dim=1)
-                nL = nn.functional.softmax(neg_logits.unsqueeze(dim=2) + diff, dim=1)
-
-            print(hidden_dim)
-
             print("pos_logits: ", pos_logits)
             print("neg_logits: ", neg_logits)
 
             print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
             for i in range(hidden_dim):
-                if modify_layer == 1:
-                    row[row_idx] = nL[:, :, i].flatten().tolist()
-                    row[row_idx + 1] = pL[:, :, i].flatten().tolist()
-                    row_idx += 2
-                else:
-                    if i % 10 == 0:
-                    #if True:
-                        print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=FLUSH_FLAG)
-                        print("hidden dim ", i, " of ", hidden_dim)
+                if i % 10 == 0:
+                #if True:
+                    print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=FLUSH_FLAG)
+                    print("hidden dim ", i, " of ", hidden_dim)
 
-                    # direct effect: change input to negative, change ith neuron to positive value 
-                    #print("direct effect: ") 
-                    nso = neg_modify_output.clone().detach()
-                    nso[0, ..., i] = pos_modify_output[0, ..., i]
-                    dir_logits = post_modification(model, nso, neg_attn, layer=modify_layer)
+                # direct effect: change input to negative, change ith neuron to positive value 
+                #print("direct effect: ") 
+                nso = neg_modify_output.clone().detach()
+                nso[0, ..., i] = pos_modify_output[0, ..., i]
+                dir_logits = post_modification(model, nso, neg_attn, layer=modify_layer)
 
-                    # indirect effect: input positive, change ith neuron to negative value
-                    #print("indirect effect: ")
-                    pso = pos_modify_output.clone().detach()
-                    pso[0, ..., i] = neg_modify_output[0, ..., i]
-                    indir_logits = post_modification(model, pso, pos_attn, layer=modify_layer)
-                    row[row_idx] = nn.functional.softmax(dir_logits, dim=1)
-                    row[row_idx+1] = nn.functional.softmax(indir_logits, dim=1)
-                    row_idx += 2
+                # indirect effect: input positive, change ith neuron to negative value
+                #print("indirect effect: ")
+                pso = pos_modify_output.clone().detach()
+                pso[0, ..., i] = neg_modify_output[0, ..., i]
+                indir_logits = post_modification(model, pso, pos_attn, layer=modify_layer)
+                row[row_idx] = nn.functional.softmax(dir_logits, dim=1)
+                row[row_idx+1] = nn.functional.softmax(indir_logits, dim=1)
+                row_idx += 2
 
                 # #direct effect - neg logits (effect of changing ith neuron to positive)
                 #
@@ -270,6 +247,8 @@ def evaluate(model,
                 #     print("\tindir: ", row[row_idx - 1])
 
             for b in range(batch_size):
+                pos_layer_activation_writer.writerow(pos_modify_output[b].tolist())
+                neg_layer_activation_writer.writerow(neg_modify_output[b].tolist())
 
                 writer.writerow(row[:, b, :].tolist())
                 # if DEBUG:
