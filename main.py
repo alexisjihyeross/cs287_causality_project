@@ -63,10 +63,10 @@ if do_evaluate:
 
     print("loading data...")
     # Note these are different, see indices
-    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 6, b_idx = 7)
-    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, batch_size = 1, a_idx = 8, b_idx = 7)
+    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_matched", tokenizer, batch_size = 250, a_idx = 6, b_idx = 7)
+    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_matched", tokenizer, batch_size = 250, a_idx = 8, b_idx = 7)
 
-    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may10/binary_finetune", DEBUG=True)
+    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may12_3/binary_finetune", 3, DEBUG=True)
 
 if other:
     config = BertConfig('models/binary/' + model_name + '_config.json')
