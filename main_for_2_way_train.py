@@ -68,10 +68,10 @@ if do_evaluate:
     #eval_model.to('cuda:0')
     eval_model.eval()
 
-    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 10, a_idx=6,b_idx=7)
-    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_mismatched", tokenizer, max_seq_len=70, batch_size = 10, a_idx=8, b_idx=7)
+    pos_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_matched", tokenizer, max_seq_len=70, batch_size = 30, a_idx=6,b_idx=7)
+    neg_dataloader = processor.get_dataloader(DATA_DIR, "neg_dev_matched", tokenizer, max_seq_len=70, batch_size = 30, a_idx=8, b_idx=7)
 
-    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may10/three_way_finetune", DEBUG=True)
+    evaluate(eval_model, pos_dataloader, neg_dataloader, "experiments/may12_2/three_way_finetune", 2, DEBUG=True)
 
 
 if other:

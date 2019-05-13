@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from models import BertTokenizer, MnliProcessor, BinaryMnliProcessor, BertForSequenceClassification, modified_forward, post_modification
 import copy
+import time
 
 BERT_SIZE = 'base'  # or 'large'
 BERT_CASED = False
@@ -199,9 +200,12 @@ def evaluate(model,
 
             print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
+            x = time.time()
             for i in range(hidden_dim):
-                if i % 10 == 0:
+                if i % 1 == 0:
                 #if True:
+
+                    print(time.time() - x)
                     print("hidden dim ", i, " of ", hidden_dim, file=out_log, flush=FLUSH_FLAG)
                     print("hidden dim ", i, " of ", hidden_dim)
 
@@ -216,8 +220,10 @@ def evaluate(model,
                 pso = pos_modify_output.clone().detach()
                 pso[0, ..., i] = neg_modify_output[0, ..., i]
                 indir_logits = post_modification(model, pso, pos_attn, layer=modify_layer)
-                row[row_idx] = nn.functional.softmax(dir_logits, dim=1)
-                row[row_idx+1] = nn.functional.softmax(indir_logits, dim=1)
+                non_copy_dir_logits = dir_logits.clone().detach()
+                non_copy_indir_logits = indir_logits.clone().detach()
+                row[row_idx] = nn.functional.softmax(non_copy_dir_logits, dim=1)
+                row[row_idx+1] = nn.functional.softmax(non_copy_indir_logits, dim=1)
                 row_idx += 2
 
                 del nso, pso, dir_logits, indir_logits
