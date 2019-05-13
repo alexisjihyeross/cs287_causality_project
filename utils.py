@@ -176,10 +176,6 @@ def evaluate(model,
         if DEBUG:
             offset = 0
         for pos_batch, neg_batch in (zip(pos_dataloader, neg_dataloader)):
-            significant_direct_dims = []
-            significant_indirect_dims = []
-
-
             # print("pos: ")
             pos_logits, pos_attn, pos_modify_output = modified_forward(model, pos_batch, modify_layer=modify_layer)
 
@@ -191,12 +187,15 @@ def evaluate(model,
             hidden_dim = pos_modify_output.shape[-1]
 
             row = torch.zeros(2 * hidden_dim + 2, batch_size, 2)
-            row[0] = nn.functional.softmax(pos_logits, dim=1)
-            row[1] = nn.functional.softmax(neg_logits, dim=1)
+            row[0] = nn.functional.softmax(pos_logits.clone().detach(), dim=1)
+            row[1] = nn.functional.softmax(neg_logits.clone().detach(), dim=1)
             row_idx = 2
 
             print("pos_logits: ", pos_logits)
             print("neg_logits: ", neg_logits)
+
+            del pos_logits, neg_logits
+            torch.cuda.clear_cache()
 
             print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
@@ -220,6 +219,9 @@ def evaluate(model,
                 row[row_idx] = nn.functional.softmax(dir_logits, dim=1)
                 row[row_idx+1] = nn.functional.softmax(indir_logits, dim=1)
                 row_idx += 2
+
+                del nso, pso, dir_logits, indir_logits
+                torch.cuda.empty_cache()
 
                 # #direct effect - neg logits (effect of changing ith neuron to positive)
                 #
@@ -261,6 +263,9 @@ def evaluate(model,
                 # significant_dim_writer.writerow(
                 #     [significant_direct_dims, significant_indirect_dims])
                 batch_num += 1
+
+            del row, pos_modify_output, neg_modify_output, neg_attn, pos_attn
+            torch.cuda.clear_cache()
 
 
 def line_count(fname):
