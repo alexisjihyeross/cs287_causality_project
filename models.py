@@ -280,7 +280,7 @@ def post_modification(model, modified, attn_mask, layer=1):
 
 
 def modified_forward(model, batch, modify_layer=1):
-    input_ids, attention_mask, token_type_ids, _ = batch
+    input_ids, attention_mask, token_type_ids, _ = [b.cuda() for b in batch]
     bert = model.bert
     attention_mask = torch.ones_like(input_ids) if attention_mask is None else attention_mask
     token_type_ids = torch.zeros_like(input_ids) if token_type_ids is None else token_type_ids

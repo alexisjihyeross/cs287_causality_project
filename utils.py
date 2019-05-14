@@ -196,7 +196,7 @@ def evaluate(model,
             print("neg_logits: ", neg_logits)
 
             del pos_logits, neg_logits
-            torch.cuda.clear_cache()
+            torch.cuda.empty_cache()
 
             print("batch: ", str(batch_num), file=out_log, flush=FLUSH_FLAG)
             print("batch: ", str(batch_num))
@@ -271,7 +271,7 @@ def evaluate(model,
                 batch_num += 1
 
             del row, pos_modify_output, neg_modify_output, neg_attn, pos_attn
-            torch.cuda.clear_cache()
+            torch.cuda.empty_cache()
 
 
 def line_count(fname):
